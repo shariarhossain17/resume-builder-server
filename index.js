@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // userName database  :
@@ -26,14 +27,27 @@ async function run() {
    await client.connect()
    console.log("db-connect");
 
+    // collection
+   const resumeBuilderUsers = client.db("Resume_Builder").collection("users");
+   
 
-   const users = client.db("Resume_Builder").collection("user");
-    // for test
-    app.get('/users',async(req,res) => {
-        const result = await users.find().toArray()
-        res.send(result)
+
+  //  users store on mongoDB
+   app.put('/users/:email',async (req,res) => {
+    const email = req.params.email;
+    const user = req.body;
+    const filter = {email:email}
+    const option = { upsert: true }
+    const updatedDoc = {
+      $set:user
+    }
+    const result = await resumeBuilderUsers.updateOne(filter,updatedDoc,option)
+    const token = jwt.sign({email:email},process.env.JWT_TOKEN,{
+      expiresIn:"1d"
     })
-    
+
+    res.send({result,token,message:"200"})
+  }) 
 }
 
 finally {
