@@ -28,9 +28,16 @@ async function run() {
    console.log("db-connect");
 
     // collection
-   const resumeBuilderUsers = client.db("Resume_Builder").collection("users");
+   const resumeBuilderUsersCollection = client.db("Resume_Builder").collection("users");
+   const resumeBuilderResumeCollection = client.db("Resume_Builder").collection("resume-collection");
    
 
+  // post edit-resume information
+    app.post('/edit-resume/:email',async(req,res) => {
+      const doc = req.body;
+      const result = await resumeBuilderResumeCollection.insertOne(doc)
+      res.send({result,message:"success"})
+    })
 
   //  users store on mongoDB
    app.put('/users/:email',async (req,res) => {
@@ -41,7 +48,7 @@ async function run() {
     const updatedDoc = {
       $set:user
     }
-    const result = await resumeBuilderUsers.updateOne(filter,updatedDoc,option)
+    const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc,option)
     const token = jwt.sign({email:email},process.env.JWT_TOKEN,{
       expiresIn:"1d"
     })
