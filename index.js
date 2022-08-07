@@ -50,6 +50,7 @@ const run = async () => {
 
     //  users store on mongoDB
     app.put("/users/:email", async (req, res) => {
+      var token = jwt.sign(email, process.env.SECRET_TOKEN);
       const email = req.params.email;
       const user = req.body;
       const filter = { email: email };
@@ -62,11 +63,8 @@ const run = async () => {
         updatedDoc,
         option
       );
-      const token = jwt.sign({ email: email }, process.env.SECRET_TOKEN, {
-        expiresIn: "1d",
-      });
 
-      res.send({ result, token, message: "200" });
+      res.send({ result, token });
     });
   } finally {
     // finally
