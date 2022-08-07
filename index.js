@@ -20,8 +20,27 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// verify jwt function
+const verifyJwt = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "unAuthorize access" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.SECRET_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+    if (decoded) {
+      req.decoded = decoded;
+      next();
+    }
+  });
+};
+
 // backend all code
-async function run() {
+const run = async () => {
   try {
     await client.connect();
     console.log("db-connect");
@@ -43,15 +62,16 @@ async function run() {
         updatedDoc,
         option
       );
-      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
+      const token = jwt.sign({ email: email }, process.env.SECRET_TOKEN, {
         expiresIn: "1d",
       });
 
       res.send({ result, token, message: "200" });
     });
   } finally {
+    // finally
   }
-}
+};
 run().catch(console.dir);
 
 // server run
