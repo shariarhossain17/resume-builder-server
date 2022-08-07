@@ -2,55 +2,54 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
-const jwt = require('jsonwebtoken')
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require("jsonwebtoken");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // userName database  :
-// password database: 
+// password database:
 const app = express();
 
 // middleware
 app.use(cors());
 app.use(express.json());
 
-
-
-
 const uri = `mongodb+srv://${process.env.RESUME_BUILDER}:${process.env.RESUME_BUILDER_PASS}@cluster0.ozvnhci.mongodb.net/?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-
-
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverApi: ServerApiVersion.v1,
+});
 
 // backend all code
 async function run() {
   try {
-   await client.connect()
-   console.log("db-connect");
+    await client.connect();
+    console.log("db-connect");
 
     // collection
-   const resumeBuilderUsers = client.db("Resume_Builder").collection("users");
-   
+    const usersCollection = client.db("Resume_Builder").collection("users");
 
+    //  users store on mongoDB
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $set: user,
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
+        expiresIn: "1d",
+      });
 
-  //  users store on mongoDB
-   app.put('/users/:email',async (req,res) => {
-    const email = req.params.email;
-    const user = req.body;
-    const filter = {email:email}
-    const option = { upsert: true }
-    const updatedDoc = {
-      $set:user
-    }
-    const result = await resumeBuilderUsers.updateOne(filter,updatedDoc,option)
-    const token = jwt.sign({email:email},process.env.JWT_TOKEN,{
-      expiresIn:"1d"
-    })
-
-    res.send({result,token,message:"200"})
-  }) 
-}
-
-finally {
+      res.send({ result, token, message: "200" });
+    });
+  } finally {
   }
 }
 run().catch(console.dir);
