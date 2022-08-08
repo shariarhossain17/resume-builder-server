@@ -30,7 +30,25 @@ async function run() {
     // collection
    const resumeBuilderUsersCollection = client.db("Resume_Builder").collection("users");
    const resumeBuilderResumeCollection = client.db("Resume_Builder").collection("resume-collection");
+   const resumeBuilderService = client.db("Resume_Builder").collection("Services");
    
+    
+  //  get single service
+    app.get('/services/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id:ObjectId(id)}
+      const result = await resumeBuilderService.findOne(query)
+      res.send(result)
+    })
+   // get-all-service
+    app.get('/services',async(req,res)=> {
+      const result = await resumeBuilderService.find().toArray()
+      res.send(result)
+    })
+
+
+
+
 
   // post edit-resume information
     app.post('/edit-resume/:email',async(req,res) => {
