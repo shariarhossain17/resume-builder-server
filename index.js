@@ -50,8 +50,8 @@ const run = async () => {
 
     //  users store on mongoDB
     app.put("/users/:email", async (req, res) => {
-      var token = jwt.sign(email, process.env.SECRET_TOKEN);
       const email = req.params.email;
+      var token = jwt.sign(email, process.env.SECRET_TOKEN);
       const user = req.body;
       const filter = { email: email };
       const option = { upsert: true };
