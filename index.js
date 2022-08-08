@@ -46,7 +46,11 @@ const run = async () => {
     console.log("db-connect");
 
     // collection
+
     const usersCollection = client.db("Resume_Builder").collection("users");
+    const resumeBuilderResumeCollection = client
+      .db("Resume_Builder")
+      .collection("resume-collection");
 
     //  users store on mongoDB
     app.put("/users/:email", async (req, res) => {
@@ -65,6 +69,13 @@ const run = async () => {
       );
 
       res.send({ result, token });
+    });
+
+    // post edit-resume information
+    app.post("/edit-resume/:email", async (req, res) => {
+      const doc = req.body;
+      const result = await resumeBuilderResumeCollection.insertOne(doc);
+      res.send({ result, message: "success" });
     });
   } finally {
     // finally
