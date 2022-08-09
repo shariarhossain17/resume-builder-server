@@ -4,6 +4,7 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.PAYMENT_API_KEY)
 
 // userName database  :
 // password database: 
@@ -32,6 +33,8 @@ async function run() {
    const resumeBuilderResumeCollection = client.db("Resume_Builder").collection("resume-collection");
    const resumeBuilderService = client.db("Resume_Builder").collection("Services");
    
+   const resumeBuilderServiceBooking = client.db("Resume_Builder").collection("booking");
+   
     
   //  get single service
     app.get('/services/:id',async(req,res)=>{
@@ -40,9 +43,17 @@ async function run() {
       const result = await resumeBuilderService.findOne(query)
       res.send(result)
     })
+
    // get-all-service
     app.get('/services',async(req,res)=> {
       const result = await resumeBuilderService.find().toArray()
+      res.send(result)
+    })
+
+    // booking service 
+    app.post('/booking',async(req,res)=> {
+      const booking = req.body;
+      const result = await resumeBuilderServiceBooking.insertOne(booking)
       res.send(result)
     })
 
