@@ -56,7 +56,26 @@ async function run() {
       const result = await resumeBuilderServiceBooking.insertOne(booking)
       res.send(result)
     })
+    
 
+    // payment api
+    app.post("/create-payment-intent",async(req,res)=>{
+      const service = req.body;
+      const price = service.price;
+      console.log(price);
+      if (price) {
+        const amount = price * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      }
+})
 
 
 
