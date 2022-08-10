@@ -4,6 +4,7 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
 
 // userName database  :
 // password database:
@@ -46,36 +47,85 @@ const run = async () => {
     console.log("db-connect");
 
     // collection
-
-    const usersCollection = client.db("Resume_Builder").collection("users");
+    const resumeBuilderUsersCollection = client
+      .db("Resume_Builder")
+      .collection("users");
     const resumeBuilderResumeCollection = client
       .db("Resume_Builder")
       .collection("resume-collection");
-
-    //  users store on mongoDB
-    app.put("/users/:email", async (req, res) => {
-      const email = req.params.email;
-      var token = jwt.sign(email, process.env.SECRET_TOKEN);
-      const user = req.body;
-      const filter = { email: email };
-      const option = { upsert: true };
-      const updatedDoc = {
-        $set: user,
-      };
-      const result = await usersCollection.updateOne(
-        filter,
-        updatedDoc,
-        option
-      );
-
-      res.send({ result, token });
-    });
+    const resumeBuilderService = client
+      .db("Resume_Builder")
+      .collection("Services");
+    const resumeBuilderServiceBooking = client
+      .db("Resume_Builder")
+      .collection("booking");
 
     // post edit-resume information
     app.post("/edit-resume/:email", async (req, res) => {
       const doc = req.body;
       const result = await resumeBuilderResumeCollection.insertOne(doc);
       res.send({ result, message: "success" });
+    });
+
+    //  users store on mongoDB
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $set: user,
+      };
+      const result = await resumeBuilderUsersCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
+        expiresIn: "1d",
+      });
+      res.send({ result, token, message: "200" });
+    });
+    /*  Shariar api*/
+    // single service query by id
+
+    app.get("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await resumeBuilderService.findOne(query);
+      res.send(result);
+    });
+
+    // get-all-service
+    app.get("/services", async (req, res) => {
+      const result = await resumeBuilderService.find().toArray();
+      res.send(result);
+    });
+
+    // booking service
+    app.post("/booking", async (req, res) => {
+      const booking = req.body;
+      const result = await resumeBuilderServiceBooking.insertOne(booking);
+      res.send(result);
+    });
+
+    // payment api
+    app.post("/create-payment-intent", verifyJwt, async (req, res) => {
+      const service = req.body;
+      const price = service.price;
+
+      if (price) {
+        const amount = price * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      }
     });
   } finally {
     // finally
