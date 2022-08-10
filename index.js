@@ -23,7 +23,6 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 // verify jwt function
 const verifyJwt = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log(authHeader);
   if (!authHeader) {
     return res.status(401).send({ message: "unAuthorize access" });
   }
@@ -74,8 +73,15 @@ async function run() {
   //  get single service
 
     // get all user 
-
-
+    app.get('/all-users',async(req,res) =>{
+      const email = req.query
+      if(email === email){
+        const query = await resumeBuilderUsersCollection.find(email).toArray()
+        return res.send(query)
+      }
+      const users = await resumeBuilderUsersCollection.find().toArray()
+      res.send(users)
+    })
 
     // single service query by id
 
