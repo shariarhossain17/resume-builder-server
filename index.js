@@ -36,6 +36,23 @@ async function run() {
    const resumeBuilderServiceBooking = client.db("Resume_Builder").collection("booking");
    
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*  Shariar api*/
   //  get single service
     app.get('/services/:id',async(req,res)=>{
       const id = req.params.id;
@@ -62,7 +79,7 @@ async function run() {
     app.post("/create-payment-intent",async(req,res)=>{
       const service = req.body;
       const price = service.price;
-      console.log(price);
+      
       if (price) {
         const amount = price * 100;
         const paymentIntent = await stripe.paymentIntents.create({
