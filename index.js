@@ -20,7 +20,25 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.RESUME_BUILDER}:${process.env.RESUME_BUILDER_PASS}@cluster0.ozvnhci.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// verify jwt function
+const verifyJwt = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  console.log(authHeader);
+  if (!authHeader) {
+    return res.status(401).send({ message: "unAuthorize access" });
+  }
+  const token = authHeader.split(" ")[1];
 
+  jwt.verify(token, process.env.JWT_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+    if (decoded) {
+      req.decoded = decoded;
+      next();
+    }
+  });
+};
 
 // backend all code
 async function run() {
@@ -54,6 +72,13 @@ async function run() {
 
     /*  Shariar api*/
   //  get single service
+
+    // get all user 
+
+
+
+    // single service query by id
+
     app.get('/services/:id',async(req,res)=>{
       const id = req.params.id;
       const query = {_id:ObjectId(id)}
@@ -76,7 +101,7 @@ async function run() {
     
 
     // payment api
-    app.post("/create-payment-intent",async(req,res)=>{
+    app.post("/create-payment-intent",verifyJwt,async(req,res)=>{
       const service = req.body;
       const price = service.price;
       
