@@ -52,7 +52,18 @@ async function run() {
    
    const resumeBuilderServiceBooking = client.db("Resume_Builder").collection("booking");
    
-    
+    // const verify admin
+    const verifyAdmin = async(req,res,next) => {
+      const decoded = req.decoded.email
+      const filter = {email:decoded}
+      const admin = await resumeBuilderUsersCollection.findOne(filter)
+      if(admin.role === "admin"){
+        next()
+      }
+      else{
+        return res.status(403).send({message:"forbidden access"})
+      }
+    }
 
 
 
@@ -70,7 +81,22 @@ async function run() {
 
 
     /*  Shariar api*/
- 
+    // remove admin
+    // all admin
+    app.get('/admin',async(req,res)=>{
+      const role = req.query
+      if(role === role){
+        const query = await resumeBuilderUsersCollection.find(role).toArray()
+        return res.send(query)
+      }
+    })
+    // secure admin api
+    app.get('/admin/:email',verifyJwt,verifyAdmin,async(req,res)=>{
+      const email = req.params.email;
+      const admin = await resumeBuilderUsersCollection.findOne({email:email})
+      const isAdmin = admin.role == "admin"
+      res.send(isAdmin)
+    })
     // create admin
     app.put('/users/admin/:email',async(req,res)=> {
       const email = req.params.email
