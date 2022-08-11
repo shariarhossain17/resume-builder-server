@@ -82,8 +82,19 @@ async function run() {
 
     /*  Shariar api*/
     // remove admin
+    app.patch('/remove-admin/:email',async(req,res)=> {
+      const email = req.params.email;
+      const filter = {email:email};
+      const updatedDoc = {
+        $set:{
+          role:""
+        }
+      }
+      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
     // all admin
-    app.get('/admin',async(req,res)=>{
+    app.get('/admin',verifyJwt,verifyAdmin,async(req,res)=>{
       const role = req.query
       if(role === role){
         const query = await resumeBuilderUsersCollection.find(role).toArray()
