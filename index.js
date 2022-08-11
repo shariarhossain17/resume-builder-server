@@ -70,10 +70,22 @@ async function run() {
 
 
     /*  Shariar api*/
-  //  get single service
+ 
+    // create admin
+    app.put('/users/admin/:email',async(req,res)=> {
+      const email = req.params.email
+      const query = {email:email}
+      const updatedDoc = {
+        $set:{
+          role:"admin"
+        }
+      }
+      const result = await resumeBuilderUsersCollection.updateOne(query,updatedDoc)
+      res.send(result)
+    })
 
     // get all user 
-    app.get('/all-users',async(req,res) =>{
+    app.get('/all-users',verifyJwt,async(req,res) =>{
       const email = req.query
       if(email === email){
         const query = await resumeBuilderUsersCollection.find(email).toArray()
