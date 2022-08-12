@@ -153,6 +153,12 @@ async function run() {
       const result = await resumeBuilderServiceBooking.insertOne(booking)
       res.send(result)
     })
+
+    // get all booking
+    app.get('/booking-service',verifyJwt,verifyAdmin,async(req,res) => {
+      const result = await resumeBuilderServiceBooking.find().toArray()
+      res.send(result)
+    })
     
 
     // payment api
