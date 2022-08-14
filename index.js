@@ -134,8 +134,8 @@ const run = async () => {
 
     // set coverLetter information in database
     app.put("/coverLetterInfo/:email", verifyJwt, async (req, res) => {
-      const email = req.params.email;
-      const filter = { email };
+      const userEmail = req.params.email;
+      const filter = { userEmail };
       const coverLetterInfo = req?.body;
       console.log(filter, coverLetterInfo);
       const options = { upsert: true };
@@ -147,6 +147,14 @@ const run = async () => {
         updateDoc,
         options
       );
+      res.send(result);
+    });
+
+    // Get coverLetter information
+    app.get("/coverLetterInfo/:id", verifyJwt, async (req, res) => {
+      const userEmail = req.params.id;
+      const query = { userEmail };
+      const result = await coverLetterInfoCollection.findOne(query);
       res.send(result);
     });
   } finally {
