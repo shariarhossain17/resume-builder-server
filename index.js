@@ -29,7 +29,7 @@ const verifyJwt = (req, res, next) => {
   }
   const token = authHeader.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_TOKEN, function (err, decoded) {
+  jwt.verify(token, process.env.JWT_TOKEN, function (err, decoded) {
     if (err) {
       return res.status(403).send({ message: "forbidden access" });
     }
@@ -59,6 +59,10 @@ const run = async () => {
     const resumeBuilderServiceBooking = client
       .db("Resume_Builder")
       .collection("booking");
+
+    const coverLetterInfoCollection = client
+      .db("coverLetterInfo")
+      .collection("CL_info");
 
     // post edit-resume information
     app.post("/edit-resume/:email", async (req, res) => {
@@ -126,6 +130,24 @@ const run = async () => {
           clientSecret: paymentIntent.client_secret,
         });
       }
+    });
+
+    // set coverLetter information in database
+    app.put("/coverLetterInfo/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const coverLetterInfo = req?.body;
+      console.log(filter, coverLetterInfo);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: coverLetterInfo,
+      };
+      const result = await coverLetterInfoCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
     });
   } finally {
     // finally
