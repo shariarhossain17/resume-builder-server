@@ -81,6 +81,13 @@ async function run() {
 
 
     /*  Shariar api*/
+
+    // user order
+    app.get('/order/:email',verifyJwt,async (req,res) => {
+      const email = req.params.email;
+      const result = await resumeBuilderServiceBooking.find({email:email}).toArray()
+      res.send(result)
+    })
     // remove admin
     app.patch('/remove-admin/:email',async(req,res)=> {
       const email = req.params.email;
@@ -102,7 +109,7 @@ async function run() {
       }
     })
     // secure admin api
-    app.get('/admin/:email',verifyJwt,verifyAdmin,async(req,res)=>{
+    app.get('/admin/:email',verifyJwt,async(req,res)=>{
       const email = req.params.email;
       const admin = await resumeBuilderUsersCollection.findOne({email:email})
       const isAdmin = admin.role == "admin"
