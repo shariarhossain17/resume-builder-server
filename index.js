@@ -142,6 +142,21 @@ async function run() {
       res.send(result)
     })
 
+    // create expert
+    app.put('/users/expert/:email',async(req,res)=> {
+      const email = req.params.email
+      const query = {email:email}
+      const updatedDoc = {
+        $set:{
+          writer:"expert"
+        }
+      }
+      const result = await resumeBuilderUsersCollection.updateOne(query,updatedDoc)
+      res.send(result)
+    })
+
+    
+
     // get all user 
     app.get('/all-users',verifyJwt,async(req,res) =>{
       const email = req.query
