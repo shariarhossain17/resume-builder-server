@@ -103,7 +103,7 @@ async function run() {
       res.send(result)
     })
     // remove admin
-    app.patch('/remove-admin/:email',async(req,res)=> {
+    app.patch('/remove-admin/:email',verifyJwt,verifyAdmin,async(req,res)=> {
       const email = req.params.email;
       const filter = {email:email};
       const updatedDoc = {
@@ -130,7 +130,7 @@ async function run() {
       res.send(isAdmin)
     })
     // create admin
-    app.put('/users/admin/:email',async(req,res)=> {
+    app.put('/users/admin/:email',verifyJwt,verifyAdmin,async(req,res)=> {
       const email = req.params.email
       const query = {email:email}
       const updatedDoc = {
@@ -141,9 +141,36 @@ async function run() {
       const result = await resumeBuilderUsersCollection.updateOne(query,updatedDoc)
       res.send(result)
     })
+    // secure expert
+    app.get('/expert/:email',async(req,res)=>{
+      const email = req.params.email;
+      const expert = await resumeBuilderUsersCollection.findOne({email:email})
+      const isExpert = expert.writer == "expert"
+      res.send(isExpert)
+    })
+    // remove expert
+    app.patch('/remove-expert/:email',verifyJwt,verifyAdmin,async(req,res)=> {
+      const email = req.params.email;
+      const filter = {email:email};
+      const updatedDoc = {
+        $set:{
+          writer:""
+        }
+      }
+      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
 
+    // get all expert 
+    app.get('/expert',verifyJwt,verifyAdmin,async(req,res)=>{
+      const writer = req.query
+      if(writer === writer){
+        const query = await resumeBuilderUsersCollection.find(writer).toArray()
+        return res.send(query)
+      }
+    })
     // create expert
-    app.put('/users/expert/:email',async(req,res)=> {
+    app.put('/users/expert/:email',verifyJwt,verifyAdmin,async(req,res)=> {
       const email = req.params.email
       const query = {email:email}
       const updatedDoc = {
