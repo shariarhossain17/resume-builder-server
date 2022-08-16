@@ -82,6 +82,12 @@ async function run() {
 
 
     /*  Shariar api*/
+    // all review api
+
+    app.get('/reviews',async(req,res) => {
+      const result = await (await (resumeBuilderUserReview.find().toArray())).reverse()
+      res.send(result)
+    })
 
 
     // Review post api
