@@ -85,9 +85,13 @@ async function run() {
     /*  Shariar api*/
     // blog post query by email
 
-    app.get('/blogs/:email')
+    app.get('/blogs/:email',async(req,res)=> {
+      const email = req.params.email;
+      const result = await resumeBuilderBlog.find({email:email}).toArray()
+      res.send(result)
+    })
 
-    
+
     // Blog api
     app.post("/blogs",verifyJwt,async (req,res) => {
       const blog = req.body
