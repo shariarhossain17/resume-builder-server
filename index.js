@@ -78,19 +78,31 @@ async function run() {
     };
 
     /*  Shariar api*/
-    
-    
-    // single blog post
-    app.get('/blog/:id',async(req,res)=> {
+
+    // edit blog post
+    app.patch("/blog/:id", verifyJwt,async (req, res) => {
+      const updateBlog = req.body;
+      console.log(updateBlog);
       const id = req.params.id;
-      const filter = {_id:ObjectId(id)}
-      const result = await resumeBuilderBlog.findOne(filter)
-      res.send(result)
-    })
-    
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: updateBlog,
+      };
+
+      const result = await resumeBuilderBlog.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+    // single blog post
+    app.get("/blog/:id", verifyJwt,async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await resumeBuilderBlog.findOne(filter);
+      res.send(result);
+    });
+
     // delete blog post
 
-    app.delete("/blogs/:id",verifyJwt, async (req, res) => {
+    app.delete("/blogs/:id", verifyJwt, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await resumeBuilderBlog.deleteOne(filter);
