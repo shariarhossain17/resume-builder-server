@@ -78,10 +78,19 @@ async function run() {
     };
 
     /*  Shariar api*/
-
+    
+    
+    // single blog post
+    app.get('/blog/:id',async(req,res)=> {
+      const id = req.params.id;
+      const filter = {_id:ObjectId(id)}
+      const result = await resumeBuilderBlog.findOne(filter)
+      res.send(result)
+    })
+    
     // delete blog post
 
-    app.delete("/blogs/:id", async (req, res) => {
+    app.delete("/blogs/:id",verifyJwt, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await resumeBuilderBlog.deleteOne(filter);
@@ -90,8 +99,9 @@ async function run() {
 
     // blog post query by email
 
-    app.get("/blogs/:email", verifyJwt, async (req, res) => {
+    app.get("/blogs/:email", async (req, res) => {
       const email = req.params.email;
+      console.log(email);
       const result = await resumeBuilderBlog.find({ email: email }).toArray();
       res.send(result);
     });
