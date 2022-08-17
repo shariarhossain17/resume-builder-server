@@ -52,6 +52,7 @@ async function run() {
    
    const resumeBuilderServiceBooking = client.db("Resume_Builder").collection("booking");
    const resumeBuilderUserReview= client.db("Resume_Builder").collection("review");
+   const resumeBuilderBlog= client.db("Resume_Builder").collection("Blog");
    
     // const verify admin
     const verifyAdmin = async(req,res,next) => {
@@ -82,6 +83,18 @@ async function run() {
 
 
     /*  Shariar api*/
+    // blog post query by email
+
+    app.get('/blogs/:email')
+
+    
+    // Blog api
+    app.post("/blogs",verifyJwt,async (req,res) => {
+      const blog = req.body
+      const result = await resumeBuilderBlog.insertOne(blog);
+      res.send(result)
+    })
+
     // all review api
 
     app.get('/reviews',async(req,res) => {
