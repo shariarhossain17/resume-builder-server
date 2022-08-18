@@ -78,7 +78,21 @@ async function run() {
     };
 
     /*  Shariar api*/
+    
 
+    // all blogs
+    app.get('/all-blog',async(req,res)=>{
+
+      const filter = req.query
+      if(filter === filter){
+        const resume = await (await (resumeBuilderBlog.find(filter).toArray())).reverse()
+        return res.send(resume)
+      }
+      const result = await (
+        await resumeBuilderBlog.find().toArray()
+      ).reverse();
+      res.send(result)
+    })
     // edit blog post
     app.patch("/blog/:id", verifyJwt,async (req, res) => {
       const updateBlog = req.body;
@@ -93,7 +107,7 @@ async function run() {
       res.send(result);
     });
     // single blog post
-    app.get("/blog/:id", verifyJwt,async (req, res) => {
+    app.get("/blog/:id",async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await resumeBuilderBlog.findOne(filter);
@@ -111,7 +125,7 @@ async function run() {
 
     // blog post query by email
 
-    app.get("/blogs/:email", async (req, res) => {
+    app.get("/blogs/:email",verifyJwt, async (req, res) => {
       const email = req.params.email;
       console.log(email);
       const result = await resumeBuilderBlog.find({ email: email }).toArray();
