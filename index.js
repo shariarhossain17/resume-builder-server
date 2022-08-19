@@ -85,9 +85,8 @@ const run = async () => {
         updatedDoc,
         option
       );
-      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN);
+
       res.send({ result, token, message: "200" });
     });
     /*  Shariar api*/
@@ -137,7 +136,7 @@ const run = async () => {
       const userEmail = req.params.email;
       const filter = { userEmail };
       const coverLetterInfo = req?.body;
-      console.log(filter, coverLetterInfo);
+
       const options = { upsert: true };
       const updateDoc = {
         $set: coverLetterInfo,
