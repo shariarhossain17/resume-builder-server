@@ -65,6 +65,12 @@ async function run() {
       .collection("review");
     const resumeBuilderBlog = client.db("Resume_Builder").collection("Blog");
 
+
+
+    const coverLetterInfoCollection = client
+    .db("coverLetterInfo")
+    .collection("CL_info");
+
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
       const decoded = req.decoded.email;
@@ -356,6 +362,42 @@ async function run() {
       });
 
       res.send({ result, token, message: "200" });
+    });
+
+
+
+
+
+
+
+
+    // ifty vai api
+
+
+    // set coverLetter information in database
+    app.put("/coverLetterInfo/:email", verifyJwt, async (req, res) => {
+      const userEmail = req.params.email;
+      const filter = { userEmail };
+      const coverLetterInfo = req?.body;
+      console.log(filter, coverLetterInfo);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: coverLetterInfo,
+      };
+      const result = await coverLetterInfoCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // Get coverLetter information
+    app.get("/coverLetterInfo/:id", verifyJwt, async (req, res) => {
+      const userEmail = req.params.id;
+      const query = { userEmail };
+      const result = await coverLetterInfoCollection.findOne(query);
+      res.send(result);
     });
   } finally {
   }
