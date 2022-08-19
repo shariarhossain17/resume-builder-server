@@ -85,6 +85,21 @@ async function run() {
 
     /*  Shariar api*/
     
+
+
+    // user photo 
+
+    app.patch('/user/image/:email',async(req,res) => {
+      const email = req.params.email
+      const img = req.body;
+      const filter = {email:email}
+      const updatedDoc = {
+        $set:img
+      }
+
+      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
     // all blogs
     app.get('/all-blog',async(req,res)=>{
 
