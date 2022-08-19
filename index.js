@@ -4,6 +4,7 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const e = require("express");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
 
 // userName database  :
@@ -86,10 +87,16 @@ async function run() {
     /*  Shariar api*/
     
 
+    // single user 
+    app.get('/single/user/:email',async(req,res)=> {
+      const email = req.params.email;
+      const result = await resumeBuilderUsersCollection.findOne({email:email})
+      res.send(result)
+    })
 
     // user photo 
 
-    app.patch('/user/image/:email',async(req,res) => {
+    app.patch('/user/image/:email',verifyJwt,async(req,res) => {
       const email = req.params.email
       const img = req.body;
       const filter = {email:email}
