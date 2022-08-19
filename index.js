@@ -86,15 +86,28 @@ async function run() {
 
     /*  Shariar api*/
     
+  
 
     // single user 
-    app.get('/single/user/:email',async(req,res)=> {
+    app.get('/single/user/:email',verifyJwt,async(req,res)=> {
       const email = req.params.email;
       const result = await resumeBuilderUsersCollection.findOne({email:email})
       res.send(result)
     })
 
-    // user photo 
+
+    // user profile updated 
+    app.patch('/profile/update/:email',async(req,res) => {
+      const email = req.params.email;
+      const updateProfile = req.body
+      const filter = {email:email}
+      const updatedDoc={
+        $set:updateProfile
+      }
+      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
+    // user photo  upload and updated
 
     app.patch('/user/image/:email',verifyJwt,async(req,res) => {
       const email = req.params.email
