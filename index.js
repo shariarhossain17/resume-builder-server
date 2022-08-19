@@ -41,7 +41,7 @@ const verifyJwt = (req, res, next) => {
 };
 
 // backend all code
-const run = async () => {
+async function run() {
   try {
     await client.connect();
     console.log("db-connect");
@@ -56,40 +56,236 @@ const run = async () => {
     const resumeBuilderService = client
       .db("Resume_Builder")
       .collection("Services");
+
     const resumeBuilderServiceBooking = client
       .db("Resume_Builder")
       .collection("booking");
+    const resumeBuilderUserReview = client
+      .db("Resume_Builder")
+      .collection("review");
+    const resumeBuilderBlog = client.db("Resume_Builder").collection("Blog");
 
     const coverLetterInfoCollection = client
       .db("coverLetterInfo")
       .collection("CL_info");
 
-    // post edit-resume information
-    app.post("/edit-resume/:email", async (req, res) => {
-      const doc = req.body;
-      const result = await resumeBuilderResumeCollection.insertOne(doc);
-      res.send({ result, message: "success" });
+    // const verify admin
+    const verifyAdmin = async (req, res, next) => {
+      const decoded = req.decoded.email;
+      const filter = { email: decoded };
+      const admin = await resumeBuilderUsersCollection.findOne(filter);
+      if (admin.role === "admin") {
+        next();
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    };
+
+    /*  Shariar api*/
+
+    // all blogs
+    app.get("/all-blog", async (req, res) => {
+      const filter = req.query;
+      if (filter === filter) {
+        const resume = await (
+          await resumeBuilderBlog.find(filter).toArray()
+        ).reverse();
+        return res.send(resume);
+      }
+      const result = await (await resumeBuilderBlog.find().toArray()).reverse();
+      res.send(result);
+    });
+    // edit blog post
+    app.patch("/blog/:id", verifyJwt, async (req, res) => {
+      const updateBlog = req.body;
+      console.log(updateBlog);
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: updateBlog,
+      };
+
+      const result = await resumeBuilderBlog.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+    // single blog post
+    app.get("/blog/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await resumeBuilderBlog.findOne(filter);
+      res.send(result);
     });
 
-    //  users store on mongoDB
-    app.put("/users/:email", async (req, res) => {
+    // delete blog post
+
+    app.delete("/blogs/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await resumeBuilderBlog.deleteOne(filter);
+      res.send(result);
+    });
+
+    // blog post query by email
+
+    app.get("/blogs/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-      const user = req.body;
-      const filter = { email: email };
-      const option = { upsert: true };
+      console.log(email);
+      const result = await resumeBuilderBlog.find({ email: email }).toArray();
+      res.send(result);
+    });
+
+    // Blog api
+    app.post("/blogs", verifyJwt, async (req, res) => {
+      const blog = req.body;
+      const result = await resumeBuilderBlog.insertOne(blog);
+      res.send(result);
+    });
+
+    // all review api
+
+    app.get("/reviews", async (req, res) => {
+      const result = await (
+        await resumeBuilderUserReview.find().toArray()
+      ).reverse();
+      res.send(result);
+    });
+
+    // Review post api
+    app.post("/reviews", verifyJwt, async (req, res) => {
+      const review = req.body;
+      const result = await resumeBuilderUserReview.insertOne(review);
+      res.send(result);
+    });
+    // user order
+    app.get("/order/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const result = await resumeBuilderServiceBooking
+        .find({ email: email })
+        .toArray();
+      res.send(result);
+    });
+    // remove admin
+    app.patch(
+      "/remove-admin/:email",
+      verifyJwt,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const filter = { email: email };
+        const updatedDoc = {
+          $set: {
+            role: "",
+          },
+        };
+        const result = await resumeBuilderUsersCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
+    // all admin
+    app.get("/admin", verifyJwt, verifyAdmin, async (req, res) => {
+      const role = req.query;
+      if (role === role) {
+        const query = await resumeBuilderUsersCollection.find(role).toArray();
+        return res.send(query);
+      }
+    });
+    // secure admin api
+    app.get("/admin/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const admin = await resumeBuilderUsersCollection.findOne({
+        email: email,
+      });
+      const isAdmin = admin.role == "admin";
+      res.send(isAdmin);
+    });
+    // create admin
+    app.put("/users/admin/:email", verifyJwt, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
       const updatedDoc = {
-        $set: user,
+        $set: {
+          role: "admin",
+        },
       };
       const result = await resumeBuilderUsersCollection.updateOne(
-        filter,
-        updatedDoc,
-        option
+        query,
+        updatedDoc
       );
-      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN);
-
-      res.send({ result, token, message: "200" });
+      res.send(result);
     });
-    /*  Shariar api*/
+    // secure expert
+    app.get("/expert/:email", async (req, res) => {
+      const email = req.params.email;
+      const expert = await resumeBuilderUsersCollection.findOne({
+        email: email,
+      });
+      const isExpert = expert.writer == "expert";
+      res.send(isExpert);
+    });
+    // remove expert
+    app.patch(
+      "/remove-expert/:email",
+      verifyJwt,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const filter = { email: email };
+        const updatedDoc = {
+          $set: {
+            writer: "",
+          },
+        };
+        const result = await resumeBuilderUsersCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
+
+    // get all expert
+    app.get("/expert", verifyJwt, verifyAdmin, async (req, res) => {
+      const writer = req.query;
+      if (writer === writer) {
+        const query = await resumeBuilderUsersCollection.find(writer).toArray();
+        return res.send(query);
+      }
+    });
+    // create expert
+    app.put(
+      "/users/expert/:email",
+      verifyJwt,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email };
+        const updatedDoc = {
+          $set: {
+            writer: "expert",
+          },
+        };
+        const result = await resumeBuilderUsersCollection.updateOne(
+          query,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
+
+    // get all user
+    app.get("/all-users", verifyJwt, async (req, res) => {
+      const email = req.query;
+      if (email === email) {
+        const query = await resumeBuilderUsersCollection.find(email).toArray();
+        return res.send(query);
+      }
+      const users = await resumeBuilderUsersCollection.find().toArray();
+      res.send(users);
+    });
+
     // single service query by id
 
     app.get("/services/:id", async (req, res) => {
@@ -112,6 +308,12 @@ const run = async () => {
       res.send(result);
     });
 
+    // get all booking
+    app.get("/booking-service", verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await resumeBuilderServiceBooking.find().toArray();
+      res.send(result);
+    });
+
     // payment api
     app.post("/create-payment-intent", verifyJwt, async (req, res) => {
       const service = req.body;
@@ -131,12 +333,42 @@ const run = async () => {
       }
     });
 
+    // post edit-resume information
+    app.post("/edit-resume/:email", async (req, res) => {
+      const doc = req.body;
+      const result = await resumeBuilderResumeCollection.insertOne(doc);
+      res.send({ result, message: "success" });
+    });
+
+    //  users store on mongoDB
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $set: user,
+      };
+      const result = await resumeBuilderUsersCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
+        expiresIn: "1d",
+      });
+
+      res.send({ result, token, message: "200" });
+    });
+
+    // ifty vai api
+
     // set coverLetter information in database
     app.put("/coverLetterInfo/:email", verifyJwt, async (req, res) => {
       const userEmail = req.params.email;
       const filter = { userEmail };
       const coverLetterInfo = req?.body;
-
+      console.log(filter, coverLetterInfo);
       const options = { upsert: true };
       const updateDoc = {
         $set: coverLetterInfo,
@@ -157,9 +389,8 @@ const run = async () => {
       res.send(result);
     });
   } finally {
-    // finally
   }
-};
+}
 run().catch(console.dir);
 
 // server run
@@ -171,4 +402,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log("Listening to port", port);
 });
-// nothing
