@@ -79,7 +79,6 @@ async function run() {
 
     /*  Shariar api*/
     
-
     // all blogs
     app.get('/all-blog',async(req,res)=>{
 
