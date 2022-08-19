@@ -97,7 +97,7 @@ async function run() {
 
 
     // user profile updated 
-    app.patch('/profile/update/:email',async(req,res) => {
+    app.patch('/profile/update/:email',verifyJwt,async(req,res) => {
       const email = req.params.email;
       const updateProfile = req.body
       const filter = {email:email}
