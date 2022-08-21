@@ -4,7 +4,6 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const e = require("express");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
 
 // userName database  :
@@ -66,11 +65,9 @@ async function run() {
       .collection("review");
     const resumeBuilderBlog = client.db("Resume_Builder").collection("Blog");
 
-
-
     const coverLetterInfoCollection = client
-    .db("coverLetterInfo")
-    .collection("CL_info");
+      .db("coverLetterInfo")
+      .collection("CL_info");
 
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
@@ -85,58 +82,88 @@ async function run() {
     };
 
     /*  Shariar api*/
-    
-  
 
-    // single user 
-    app.get('/single/user/:email',verifyJwt,async(req,res)=> {
-      const email = req.params.email;
-      const result = await resumeBuilderUsersCollection.findOne({email:email})
+    // put like id
+
+    app.put("/like/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = { $push: { likes: req.body.id } };
+      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
       res.send(result)
-    })
+    });
+    // paid status by single id
 
+    app.patch("/paidstatus/:id", verifyJwt, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+        },
+      };
+      const result = await resumeBuilderServiceBooking.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
 
-    // user profile updated 
-    app.patch('/profile/update/:email',verifyJwt,async(req,res) => {
+    // single user
+    app.get("/single/user/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-      const updateProfile = req.body
-      const filter = {email:email}
-      const updatedDoc={
-        $set:updateProfile
-      }
-      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
-      res.send(result)
-    })
+      const result = await resumeBuilderUsersCollection.findOne({
+        email: email,
+      });
+      res.send(result);
+    });
+
+    // user profile updated
+    app.patch("/profile/update/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const updateProfile = req.body;
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: updateProfile,
+      };
+      const result = await resumeBuilderUsersCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
     // user photo  upload and updated
 
-    app.patch('/user/image/:email',verifyJwt,async(req,res) => {
-      const email = req.params.email
+    app.patch("/user/image/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
       const img = req.body;
-      const filter = {email:email}
+      const filter = { email: email };
       const updatedDoc = {
-        $set:img
-      }
+        $set: img,
+      };
 
-      const result = await resumeBuilderUsersCollection.updateOne(filter,updatedDoc)
-      res.send(result)
-    })
+      const result = await resumeBuilderUsersCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
+
     // all blogs
-    app.get('/all-blog',async(req,res)=>{
-
-      const filter = req.query
-      if(filter === filter){
-        const resume = await (await (resumeBuilderBlog.find(filter).toArray())).reverse()
-        return res.send(resume)
+    app.get("/all-blog", async (req, res) => {
+      const filter = req.query;
+      if (filter === filter) {
+        const resume = await (
+          await resumeBuilderBlog.find(filter).toArray()
+        ).reverse();
+        return res.send(resume);
       }
-      const result = await (
-        await resumeBuilderBlog.find().toArray()
-      ).reverse();
-      res.send(result)
-    })
+      const result = await (await resumeBuilderBlog.find().toArray()).reverse();
+      res.send(result);
+    });
     // edit blog post
-    app.patch("/blog/:id", verifyJwt,async (req, res) => {
+    app.patch("/blog/:id", verifyJwt, async (req, res) => {
       const updateBlog = req.body;
-      console.log(updateBlog);
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = {
@@ -147,7 +174,7 @@ async function run() {
       res.send(result);
     });
     // single blog post
-    app.get("/blog/:id",async (req, res) => {
+    app.get("/blog/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await resumeBuilderBlog.findOne(filter);
@@ -165,9 +192,8 @@ async function run() {
 
     // blog post query by email
 
-    app.get("/blogs/:email",verifyJwt, async (req, res) => {
+    app.get("/blogs/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-      console.log(email);
       const result = await resumeBuilderBlog.find({ email: email }).toArray();
       res.send(result);
     });
@@ -399,22 +425,13 @@ async function run() {
       res.send({ result, token, message: "200" });
     });
 
-
-
-
-
-
-
-
     // ifty vai api
-
 
     // set coverLetter information in database
     app.put("/coverLetterInfo/:email", verifyJwt, async (req, res) => {
       const userEmail = req.params.email;
       const filter = { userEmail };
       const coverLetterInfo = req?.body;
-      console.log(filter, coverLetterInfo);
       const options = { upsert: true };
       const updateDoc = {
         $set: coverLetterInfo,
