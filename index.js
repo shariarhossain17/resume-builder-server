@@ -85,13 +85,30 @@ async function run() {
 
     // put like id
 
-    app.put("/like/:id", async (req, res) => {
-      const id = req.params.id;
+    app.put("/like/:userId", async (req, res) => {
+      const userFilter = {_id:ObjectId(req.params.userId)}
+      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+      const userId = user?._id;
+      const id = req.body.id;
       const filter = { _id: ObjectId(id) };
-      const updatedDoc = { $push: { likes: req.body.id } };
+      const updatedDoc = { $push: { likes: userId } };
       const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
       res.send(result)
     });
+
+    // unlike
+    app.put("/unlike/:userId", async (req, res) => {
+      const userFilter = {_id:ObjectId(req.params.userId)}
+      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+      const userId = user?._id;
+      const id = req.body.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = { $pull: { likes: userId } };
+      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
+      res.send(result)
+    });
+    
+    
     // paid status by single id
 
     app.patch("/paidstatus/:id", verifyJwt, verifyAdmin, async (req, res) => {
