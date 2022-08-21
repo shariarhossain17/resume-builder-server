@@ -83,6 +83,7 @@ async function run() {
 
     /*  Shariar api*/
 
+
     // put like id
 
     app.put("/like/:userId", async (req, res) => {
@@ -150,7 +151,6 @@ async function run() {
       res.send(result);
     });
     // user photo  upload and updated
-
     app.patch("/user/image/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
       const img = req.body;
