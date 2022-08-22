@@ -6,13 +6,21 @@ const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
 
-// userName database  :
+
 // password database:
 const app = express();
+
+
+
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+
+
+
+
 
 const uri = `mongodb+srv://${process.env.RESUME_BUILDER}:${process.env.RESUME_BUILDER_PASS}@cluster0.ozvnhci.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -97,7 +105,6 @@ async function run() {
       const userId = req.query.userId;
       const filter = {_id:ObjectId(userId)}
       const name = req.query.userName;
-      console.log(name);
 
       const user = filter ? await resumeBuilderUsersCollection.findOne(filter) :await resumeBuilderUsersCollection.findOne({name:name})
       res.send(user)
