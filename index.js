@@ -92,7 +92,16 @@ async function run() {
     
     
 
-    
+    // get a user
+    app.get('/getuser',async(req,res) => {
+      const userId = req.query.userId;
+      const filter = {_id:ObjectId(userId)}
+      const name = req.query.userName;
+      console.log(name);
+
+      const user = filter ? await resumeBuilderUsersCollection.findOne(filter) :await resumeBuilderUsersCollection.findOne({name:name})
+      res.send(user)
+    })
     // get post message 
 
     app.get("/message/:conversationId",async(req,res)=> {
