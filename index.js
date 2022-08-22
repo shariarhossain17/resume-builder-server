@@ -2,15 +2,15 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
-<<<<<<< HEAD
+
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY)
-=======
+
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
->>>>>>> 79d4efc2aa010a16509c4cfc40f4d8012e2c3175
+
 
 // userName database  :
 // password database:
@@ -53,7 +53,7 @@ const run = async () => {
     console.log("db-connect");
 
     // collection
-<<<<<<< HEAD
+
    const resumeBuilderUsersCollection = client.db("Resume_Builder").collection("users");
    const resumeBuilderResumeCollection = client.db("Resume_Builder").collection("resume-collection");
    const resumeBuilderService = client.db("Resume_Builder").collection("Services");
@@ -72,7 +72,7 @@ const run = async () => {
         return res.status(403).send({message:"forbidden access"})
       }
     }
-=======
+
     const resumeBuilderUsersCollection = client
       .db("Resume_Builder")
       .collection("users");
@@ -85,13 +85,13 @@ const run = async () => {
     const resumeBuilderServiceBooking = client
       .db("Resume_Builder")
       .collection("booking");
->>>>>>> 79d4efc2aa010a16509c4cfc40f4d8012e2c3175
+
 
     const coverLetterInfoCollection = client
       .db("coverLetterInfo")
       .collection("CL_info");
 
-<<<<<<< HEAD
+
 
 
 
@@ -229,14 +229,14 @@ const run = async () => {
     const token = jwt.sign({email:email},process.env.JWT_TOKEN,{
       expiresIn:"1d"
     })
-=======
+
     // post edit-resume information
     app.post("/edit-resume/:email", async (req, res) => {
       const doc = req.body;
       const result = await resumeBuilderResumeCollection.insertOne(doc);
       res.send({ result, message: "success" });
     });
->>>>>>> 79d4efc2aa010a16509c4cfc40f4d8012e2c3175
+
 
     //  users store on mongoDB
     app.put("/users/:email", async (req, res) => {
@@ -338,9 +338,5 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => {
   console.log("Listening to port", port);
-<<<<<<< HEAD
+
 });
-=======
-});
-// nothing
->>>>>>> 79d4efc2aa010a16509c4cfc40f4d8012e2c3175
