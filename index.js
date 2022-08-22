@@ -68,6 +68,9 @@ async function run() {
     const coverLetterInfoCollection = client
       .db("coverLetterInfo")
       .collection("CL_info");
+    const resumeBuilderAdminChat = client
+      .db("Resume_Builder")
+      .collection("conversation");
 
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
@@ -83,33 +86,48 @@ async function run() {
 
     /*  Shariar api*/
 
+    
+    
+    // get conversation user
 
+    app.get('/chat/:id',async(req,res) => {
+      const result = await resumeBuilderAdminChat.find( { members
+        : { $in: [req.params.id] } },{ _id: 0 } ).toArray();
+        res.status(200).json(result)
+    })
+    
+    // conversation post user
+
+    app.post("/chat", async (req, res) => {
+      const members = [req.body.senderId, req.body.receiverId];
+      const saveConversation = await resumeBuilderAdminChat.insertOne({members:members})
+      res.send(saveConversation);
+    });
     // put like id
 
-    app.put("/like/:userId", async (req, res) => {
-      const userFilter = {_id:ObjectId(req.params.userId)}
-      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+    app.put("/like/:userId", verifyJwt, async (req, res) => {
+      const userFilter = { _id: ObjectId(req.params.userId) };
+      const user = await resumeBuilderUsersCollection.findOne(userFilter);
       const userId = user?._id;
       const id = req.body.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = { $push: { likes: userId } };
-      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
-      res.send(result)
+      const result = await resumeBuilderBlog.updateOne(filter, updatedDoc);
+      res.send(result);
     });
 
     // unlike
-    app.put("/unlike/:userId", async (req, res) => {
-      const userFilter = {_id:ObjectId(req.params.userId)}
-      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+    app.put("/unlike/:userId", verifyJwt, async (req, res) => {
+      const userFilter = { _id: ObjectId(req.params.userId) };
+      const user = await resumeBuilderUsersCollection.findOne(userFilter);
       const userId = user?._id;
       const id = req.body.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = { $pull: { likes: userId } };
-      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
-      res.send(result)
+      const result = await resumeBuilderBlog.updateOne(filter, updatedDoc);
+      res.send(result);
     });
-    
-    
+
     // paid status by single id
 
     app.patch("/paidstatus/:id", verifyJwt, verifyAdmin, async (req, res) => {
