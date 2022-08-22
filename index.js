@@ -71,6 +71,9 @@ async function run() {
     const resumeBuilderAdminChat = client
       .db("Resume_Builder")
       .collection("conversation");
+    const resumeBuilderAdminMessage = client
+      .db("Resume_Builder")
+      .collection("message");
 
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
@@ -88,6 +91,23 @@ async function run() {
 
     
     
+
+    
+    // get post message 
+
+    app.get("/message/:conversationId",async(req,res)=> {
+      const result = await resumeBuilderAdminMessage.find({
+        conversationId:req.params.conversationId
+      }).toArray()
+      res.send(result)
+    })
+    // post message user 
+
+    app.post('/message',async(req,res) => {
+      const newMessage = req.body;
+      const result = await resumeBuilderAdminMessage.insertOne(newMessage)
+      res.send(result)
+    })
     // get conversation user
 
     app.get('/chat/:id',async(req,res) => {
