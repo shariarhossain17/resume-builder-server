@@ -16,9 +16,19 @@ const io = new Server(server, {
   },
 });
 
+
+let users = []
+
+const addUser = (userId, socketId) => {
+    !users.some((user) => user.userId === userId) &&
+      users.push({ userId, socketId });
+  };
 io.on("connection",(socket) => {
     console.log("on user connect");
-    socket.emit("myevent","welcome to socket")
+    socket.on("addUser", (userId) => {
+        addUser(userId, socket.id);
+        socket.emit("getUsers", users);
+      });
 })
 server.listen(8000,() => {
     console.log("socket running");
