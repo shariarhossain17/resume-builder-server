@@ -96,12 +96,29 @@ async function run() {
 
     
 
+    app.get('/messages/:id',async(req,res)=> {
+      const from = req.params.id
+      const to = req.query.to
+      console.log(from,to);
+      const messages = await resumeBuilderAdminMessage.find({
+        users:{
+          $all:[from,to]
+        }
+      }).toArray()
+      const projectedMessages = messages.map((msg) => {
+        return {
+          fromSelf: msg.sender.toString() === from,
+          message: msg.text,
+        };
+      });
+      res.json(projectedMessages);
+    })
     // message post api
     
     app.post('/messages',async (req,res) => {
       const {from,to,text} = req.body
       const result = await resumeBuilderAdminMessage.insertOne({
-        text:text,
+        text:{text},
         users:[from,to],
         sender:from,
         createdAt:Date.now()
