@@ -76,9 +76,6 @@ async function run() {
     const coverLetterInfoCollection = client
       .db("coverLetterInfo")
       .collection("CL_info");
-    const resumeBuilderAdminChat = client
-      .db("Resume_Builder")
-      .collection("conversation");
     const resumeBuilderAdminMessage = client
       .db("Resume_Builder")
       .collection("message");
@@ -98,47 +95,20 @@ async function run() {
     /*  Shariar api*/
 
     
+
+    // message post api
     
-
-    // get a user
-    app.get('/getuser',async(req,res) => {
-      const userId = req.query.userId;
-      const filter = {_id:ObjectId(userId)}
-      const name = req.query.userName;
-
-      const user = filter ? await resumeBuilderUsersCollection.findOne(filter) :await resumeBuilderUsersCollection.findOne({name:name})
-      res.send(user)
-    })
-    // get post message 
-
-    app.get("/message/:conversationId",async(req,res)=> {
-      const result = await resumeBuilderAdminMessage.find({
-        conversationId:req.params.conversationId
-      }).toArray()
+    app.post('/messages',async (req,res) => {
+      const {from,to,text} = req.body
+      const result = await resumeBuilderAdminMessage.insertOne({
+        text:text,
+        users:[from,to],
+        sender:from,
+        createdAt:Date.now()
+      })
       res.send(result)
     })
-    // post message user 
 
-    app.post('/message',async(req,res) => {
-      const newMessage = req.body;
-      const result = await resumeBuilderAdminMessage.insertOne(newMessage)
-      res.send(result)
-    })
-    // get conversation user
-
-    app.get('/chat/:id',async(req,res) => {
-      const result = await resumeBuilderAdminChat.find( { members
-        : { $in: [req.params.id] } },{ _id: 0 } ).toArray();
-        res.status(200).json(result)
-    })
-    
-    // conversation post user
-
-    app.post("/chat", async (req, res) => {
-      const members = [req.body.senderId, req.body.receiverId];
-      const saveConversation = await resumeBuilderAdminChat.insertOne({members:members})
-      res.send(saveConversation);
-    });
     // put like id
 
     app.put("/like/:userId", verifyJwt, async (req, res) => {
