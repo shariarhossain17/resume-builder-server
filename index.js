@@ -79,6 +79,9 @@ async function run() {
     const resumeBuilderAdminMessage = client
       .db("Resume_Builder")
       .collection("message");
+    const resumeBuilderAdminChat = client
+      .db("Resume_Builder")
+      .collection("chat");
 
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
@@ -96,34 +99,62 @@ async function run() {
 
     
 
-    app.get('/messages/:id',async(req,res)=> {
-      const from = req.params.id
-      const to = req.query.to
-      const messages = await resumeBuilderAdminMessage.find({
-        users:{
-          $all:[from,to]
-        }
-      }).toArray()
-      const projectedMessages = messages.map((msg) => {
-        return {
-          fromSelf: msg.sender.toString() === from,
-          message: msg.message.text
-        };
-      });
-      res.json(projectedMessages);
-    })
-    // message post api
-    
-    app.post('/messages',async (req,res) => {
-      const {from,to,message} = req.body
-      const result = await resumeBuilderAdminMessage.insertOne({
-        message:{text:message},
-        users:[from,to],
-        sender:from,
-        createdAt:Date.now()
+
+    // admin chat single api
+
+    app.get('/admin/chat/find/:firstId/:secondId',async(req,res)=> {
+      const result = await resumeBuilderAdminChat.findOne({
+        members:{$all:[req.params.firstId,req.params.secondId]}
       })
+      res.json(result)
+    })
+    // admin chat get api
+
+    app.get('/admin/chat/:id',async(req,res)=> {
+      const result = await  resumeBuilderAdminChat.find({
+        members:{$in:[req.params.id]}
+      }).toArray()
+      res.json(result)
+    })
+    // post admin chat
+    app.post('/admin/chat',async(req,res)=> {
+      const senderId = req.body.senderId;
+      const receiverId = req.body.receiverId;
+      const result = await resumeBuilderAdminChat.insertOne(
+        {members:[senderId,receiverId]}
+      )
       res.send(result)
     })
+
+    // app.get('/messages/:id',async(req,res)=> {
+    //   const from = req.params.id
+    //   const to = req.query.to
+    //   const messages = await resumeBuilderAdminMessage.find({
+    //     users:{
+    //       $all:[from,to]
+    //     }
+    //   }).toArray()
+    //   const projectedMessages = messages.map((msg) => {
+    //     return {
+    //       fromSelf: msg.sender.toString() === from,
+    //       message: msg.message.text
+    //     };
+    //   });
+    //   res.json(projectedMessages);
+    // })
+    // message post api
+    
+    // app.post('/messages',async (req,res) => {
+    //   const {from,to,message} = req.body
+    //   console.log(from.to,message);
+    //   const result = await resumeBuilderAdminMessage.insertOne({
+    //     message:{text:message},
+    //     users:[from,to],
+    //     sender:from,
+    //     createdAt:Date.now()
+    //   })
+    //   res.send(result)
+    // })
 
     // put like id
 
@@ -525,8 +556,11 @@ const server = app.listen(port, () => {
 
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:3000",
-    credentials: true,
+    origin: "http://localhost:3000/",
+    methods: ["PUT", "GET"],
+    allowedHeaders:["secretHeader"],
+    credentials: true
+
   },
 });
 
@@ -534,6 +568,7 @@ global.onlineUsers = new Map();
 io.on("connection", (socket) => {
   global.chatSocket = socket;
   socket.on("add-user", (userId) => {
+    console.log(userId);
     onlineUsers.set(userId, socket.id);
   });
 
