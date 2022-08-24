@@ -4,7 +4,6 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const e = require("express");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
 
 // userName database  :
@@ -84,6 +83,50 @@ async function run() {
 
     /*  Shariar api*/
 
+
+    // put like id
+
+    app.put("/like/:userId", async (req, res) => {
+      const userFilter = {_id:ObjectId(req.params.userId)}
+      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+      const userId = user?._id;
+      const id = req.body.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = { $push: { likes: userId } };
+      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
+      res.send(result)
+    });
+
+    // unlike
+    app.put("/unlike/:userId", async (req, res) => {
+      const userFilter = {_id:ObjectId(req.params.userId)}
+      const user = await resumeBuilderUsersCollection.findOne(userFilter)
+      const userId = user?._id;
+      const id = req.body.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = { $pull: { likes: userId } };
+      const result = await resumeBuilderBlog.updateOne(filter,updatedDoc)
+      res.send(result)
+    });
+    
+    
+    // paid status by single id
+
+    app.patch("/paidstatus/:id", verifyJwt, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+        },
+      };
+      const result = await resumeBuilderServiceBooking.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
+
     // single user
     app.get("/single/user/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
@@ -108,7 +151,6 @@ async function run() {
       res.send(result);
     });
     // user photo  upload and updated
-
     app.patch("/user/image/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
       const img = req.body;
@@ -123,6 +165,7 @@ async function run() {
       );
       res.send(result);
     });
+
     // all blogs
     app.get("/all-blog", async (req, res) => {
       const filter = req.query;
@@ -138,7 +181,6 @@ async function run() {
     // edit blog post
     app.patch("/blog/:id", verifyJwt, async (req, res) => {
       const updateBlog = req.body;
-      console.log(updateBlog);
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = {
@@ -169,7 +211,6 @@ async function run() {
 
     app.get("/blogs/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-      console.log(email);
       const result = await resumeBuilderBlog.find({ email: email }).toArray();
       res.send(result);
     });
@@ -406,7 +447,6 @@ async function run() {
       const userEmail = req.params.email;
       const filter = { userEmail };
       const coverLetterInfo = req?.body;
-      console.log(filter, coverLetterInfo);
       const options = { upsert: true };
       const updateDoc = {
         $set: coverLetterInfo,
