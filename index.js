@@ -5,7 +5,7 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
-
+const socket = require('socket.io')
 
 // password database:
 const app = express();
@@ -99,7 +99,6 @@ async function run() {
     app.get('/messages/:id',async(req,res)=> {
       const from = req.params.id
       const to = req.query.to
-      console.log(from,to);
       const messages = await resumeBuilderAdminMessage.find({
         users:{
           $all:[from,to]
@@ -108,7 +107,7 @@ async function run() {
       const projectedMessages = messages.map((msg) => {
         return {
           fromSelf: msg.sender.toString() === from,
-          message: msg.text,
+          message: msg.message.text
         };
       });
       res.json(projectedMessages);
@@ -116,9 +115,9 @@ async function run() {
     // message post api
     
     app.post('/messages',async (req,res) => {
-      const {from,to,text} = req.body
+      const {from,to,message} = req.body
       const result = await resumeBuilderAdminMessage.insertOne({
-        text:{text},
+        message:{text:message},
         users:[from,to],
         sender:from,
         createdAt:Date.now()
@@ -520,6 +519,28 @@ app.get("/", (req, res) => {
   res.send("Resume Builder Server");
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log("Listening to port", port);
+});
+
+const io = socket(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
+
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on("send-msg", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+    }
+  });
 });
