@@ -394,9 +394,7 @@ async function run() {
         updatedDoc,
         option
       );
-      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN);
 
       res.send({ result, token, message: "200" });
     });
