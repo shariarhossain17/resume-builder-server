@@ -150,7 +150,6 @@ async function run() {
       res.send(result)
     })
 
-    // app.get('/messages/:id',async(req,res)=> {
     //   const from = req.params.id
     //   const to = req.query.to
     //   const messages = await resumeBuilderAdminMessage.find({
@@ -574,30 +573,7 @@ app.get("/", (req, res) => {
   res.send("Resume Builder Server");
 });
 
-const server = app.listen(port, () => {
+ app.listen(port, () => {
   console.log("Listening to port", port);
 });
 
-// const io = socket(server, {
-//   cors: {
-//     origin: "http://localhost:3000/",
-//    },
-// });
-
-// let activeUser 
-
-// global.onlineUsers = new Map();
-// io.on("connection", (socket) => {
-//   global.chatSocket = socket;
-//   socket.on("add-user", (userId) => {
-//     console.log(userId);
-//     onlineUsers.set(userId, socket.id);
-//   });
-
-//   socket.on("send-msg", (data) => {
-//     const sendUserSocket = onlineUsers.get(data.to);
-//     if (sendUserSocket) {
-//       socket.to(sendUserSocket).emit("msg-recieve", data.msg);
-//     }
-//   });
-// });
