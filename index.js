@@ -99,7 +99,31 @@ async function run() {
 
     
 
+    app.get('/conversationuser/:id',async(req,res)=> {
+      const userId = {_id:ObjectId(req.params.id)}
+      const user = await resumeBuilderUsersCollection.findOne(userId)
+      res.json(user)
+    })
 
+    // get message 
+    app.get('/message/:chatId',async(req,res)=> {
+      const {chatId} = req.params;
+      const getMessage = await resumeBuilderAdminMessage.find({
+        chatId
+      }).toArray()
+      res.json(getMessage)
+    })
+    // post message 
+    app.post('/message',async(req,res)=> {
+
+      const {chatId,senderId,text} = req.body
+      const sendMessage = await resumeBuilderAdminMessage.insertOne({
+        chatId,
+        senderId,
+        text
+      })
+      res.json(sendMessage)
+    })
     // admin chat single api
 
     app.get('/admin/chat/find/:firstId/:secondId',async(req,res)=> {
@@ -554,28 +578,26 @@ const server = app.listen(port, () => {
   console.log("Listening to port", port);
 });
 
-const io = socket(server, {
-  cors: {
-    origin: "http://localhost:3000/",
-    methods: ["PUT", "GET"],
-    allowedHeaders:["secretHeader"],
-    credentials: true
+// const io = socket(server, {
+//   cors: {
+//     origin: "http://localhost:3000/",
+//    },
+// });
 
-  },
-});
+// let activeUser 
 
-global.onlineUsers = new Map();
-io.on("connection", (socket) => {
-  global.chatSocket = socket;
-  socket.on("add-user", (userId) => {
-    console.log(userId);
-    onlineUsers.set(userId, socket.id);
-  });
+// global.onlineUsers = new Map();
+// io.on("connection", (socket) => {
+//   global.chatSocket = socket;
+//   socket.on("add-user", (userId) => {
+//     console.log(userId);
+//     onlineUsers.set(userId, socket.id);
+//   });
 
-  socket.on("send-msg", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("msg-recieve", data.msg);
-    }
-  });
-});
+//   socket.on("send-msg", (data) => {
+//     const sendUserSocket = onlineUsers.get(data.to);
+//     if (sendUserSocket) {
+//       socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+//     }
+//   });
+// });
