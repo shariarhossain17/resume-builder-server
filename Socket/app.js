@@ -43,6 +43,8 @@ io.on("connection", (socket) => {
   });
 
   
+
+  
   // send message to a specific user
   socket.on("send-message", (data) => {
     const { receiverId } = data;
@@ -50,8 +52,9 @@ io.on("connection", (socket) => {
     // console.log("Sending from socket to :", receiverId)
     // console.log("Data: ", data)
     if (user) {
-      console.log("outsise",user.socketId);
-      io.to(user.socketId).emit("recieve-message", data);
+      console.log("outsise",data);
+      socket.broadcast.emit("recived-message",data)
+      // socket.to(user.socketId).emit("recieve-message", data);
     }
   });
 });
