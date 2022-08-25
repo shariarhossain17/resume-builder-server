@@ -422,7 +422,7 @@ async function run() {
     );
 
     // get all expert
-    app.get("/expert", verifyJwt, verifyAdmin, async (req, res) => {
+    app.get("/expert", verifyJwt, async (req, res) => {
       const writer = req.query;
       if (writer === writer) {
         const query = await resumeBuilderUsersCollection.find(writer).toArray();
