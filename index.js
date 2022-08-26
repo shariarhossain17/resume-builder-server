@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-// verify jwt function
+// verify jwt function //
 const verifyJwt = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
