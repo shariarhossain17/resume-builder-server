@@ -5,22 +5,14 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_API_KEY);
-const socket = require('socket.io')
+const socket = require("socket.io");
 
 // password database:
 const app = express();
 
-
-
-
 // middleware
 app.use(cors());
 app.use(express.json());
-
-
-
-
-
 
 const uri = `mongodb+srv://${process.env.RESUME_BUILDER}:${process.env.RESUME_BUILDER_PASS}@cluster0.ozvnhci.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -82,6 +74,8 @@ async function run() {
     const resumeBuilderAdminChat = client
       .db("Resume_Builder")
       .collection("chat");
+    const quizCollection = client.db("quiz").collection("quizQuestion");
+    const quizMarksCollection = client.db("quiz").collection("quizMarks");
 
     // const verify admin
     const verifyAdmin = async (req, res, next) => {
@@ -97,58 +91,59 @@ async function run() {
 
     /*  Shariar api*/
 
-    
+    app.get("/conversationuser/:id", async (req, res) => {
+      const userId = { _id: ObjectId(req.params.id) };
+      const user = await resumeBuilderUsersCollection.findOne(userId);
+      res.json(user);
+    });
 
-    app.get('/conversationuser/:id',async(req,res)=> {
-      const userId = {_id:ObjectId(req.params.id)}
-      const user = await resumeBuilderUsersCollection.findOne(userId)
-      res.json(user)
-    })
-
-    // get message 
-    app.get('/message/:chatId',async(req,res)=> {
-      const {chatId} = req.params;
-      const getMessage = await resumeBuilderAdminMessage.find({
-        chatId
-      }).toArray()
-      res.json(getMessage)
-    })
-    // post message 
-    app.post('/message',async(req,res)=> {
-
-      const {chatId,senderId,text} = req.body
+    // get message
+    app.get("/message/:chatId", async (req, res) => {
+      const { chatId } = req.params;
+      const getMessage = await resumeBuilderAdminMessage
+        .find({
+          chatId,
+        })
+        .toArray();
+      res.json(getMessage);
+    });
+    // post message
+    app.post("/message", async (req, res) => {
+      const { chatId, senderId, text } = req.body;
       const sendMessage = await resumeBuilderAdminMessage.insertOne({
         chatId,
         senderId,
-        text
-      })
-      res.json(sendMessage)
-    })
+        text,
+      });
+      res.json(sendMessage);
+    });
     // admin chat single api
 
-    app.get('/admin/chat/find/:firstId/:secondId',async(req,res)=> {
+    app.get("/admin/chat/find/:firstId/:secondId", async (req, res) => {
       const result = await resumeBuilderAdminChat.findOne({
-        members:{$all:[req.params.firstId,req.params.secondId]}
-      })
-      res.json(result)
-    })
+        members: { $all: [req.params.firstId, req.params.secondId] },
+      });
+      res.json(result);
+    });
     // admin chat get api
 
-    app.get('/admin/chat/:id',async(req,res)=> {
-      const result = await  resumeBuilderAdminChat.find({
-        members:{$in:[req.params.id]}
-      }).toArray()
-      res.json(result)
-    })
+    app.get("/admin/chat/:id", async (req, res) => {
+      const result = await resumeBuilderAdminChat
+        .find({
+          members: { $in: [req.params.id] },
+        })
+        .toArray();
+      res.json(result);
+    });
     // post admin chat
-    app.post('/admin/chat',async(req,res)=> {
+    app.post("/admin/chat", async (req, res) => {
       const senderId = req.body.senderId;
       const receiverId = req.body.receiverId;
-      const result = await resumeBuilderAdminChat.insertOne(
-        {members:[senderId,receiverId]}
-      )
-      res.send(result)
-    })
+      const result = await resumeBuilderAdminChat.insertOne({
+        members: [senderId, receiverId],
+      });
+      res.send(result);
+    });
 
     //   const from = req.params.id
     //   const to = req.query.to
@@ -166,7 +161,7 @@ async function run() {
     //   res.json(projectedMessages);
     // })
     // message post api
-    
+
     // app.post('/messages',async (req,res) => {
     //   const {from,to,message} = req.body
     //   console.log(from.to,message);
@@ -529,9 +524,7 @@ async function run() {
         updatedDoc,
         option
       );
-      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign({ email: email }, process.env.JWT_TOKEN);
 
       res.send({ result, token, message: "200" });
     });
@@ -562,18 +555,47 @@ async function run() {
       const result = await coverLetterInfoCollection.findOne(query);
       res.send(result);
     });
+
+    // add quiz question
+    app.post("/addQuiz", verifyJwt, async (req, res) => {
+      const quizQuestion = req?.body;
+      const result = await quizCollection.insertOne(quizQuestion);
+      res.send(result);
+    });
+
+    // get all quiz
+    app.get("/quiz", async (req, res) => {
+      const result = await quizCollection.find().toArray();
+      res.send(result);
+    });
+
+    // add quiz answer in database
+    app.put("/quiz/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const quizResult = req?.body;
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: quizResult,
+      };
+      const result = await quizMarksCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
   } finally {
   }
 }
 run().catch(console.dir);
 
-// server run
+// server run //
 
 app.get("/", (req, res) => {
   res.send("Resume Builder Server");
 });
 
- app.listen(port, () => {
+app.listen(port, () => {
   console.log("Listening to port", port);
 });
-
