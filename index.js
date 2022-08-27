@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-// verify jwt function
+// verify jwt function //
 const verifyJwt = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -40,7 +40,7 @@ const verifyJwt = (req, res, next) => {
   });
 };
 
-// backend all code
+// backend all code //
 async function run() {
   try {
     await client.connect();
@@ -218,6 +218,15 @@ async function run() {
 
     // single user
     app.get("/single/user/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const result = await resumeBuilderUsersCollection.findOne({
+        email: email,
+      });
+      res.send(result);
+    });
+
+    // get single user. without verify jwt
+    app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
       const result = await resumeBuilderUsersCollection.findOne({
         email: email,
