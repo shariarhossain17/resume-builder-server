@@ -225,6 +225,15 @@ async function run() {
       res.send(result);
     });
 
+    // get single user. without verify jwt
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await resumeBuilderUsersCollection.findOne({
+        email: email,
+      });
+      res.send(result);
+    });
+
     // user profile updated
     app.patch("/profile/update/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
