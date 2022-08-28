@@ -594,6 +594,14 @@ async function run() {
       );
       res.send(result);
     });
+
+    // get user quiz result
+    app.get("/quizResult/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await quizMarksCollection.findOne(query);
+      res.send(result);
+    });
   } finally {
   }
 }
