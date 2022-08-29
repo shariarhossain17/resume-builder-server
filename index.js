@@ -602,6 +602,16 @@ async function run() {
       const result = await quizMarksCollection.findOne(query);
       res.send(result);
     });
+
+    // get quiz result for leader board
+    app.get("/quizResult", verifyJwt, async (req, res) => {
+      const result = await quizMarksCollection
+        .find({})
+        .sort({ marks: -1 })
+        .limit(20)
+        .toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
