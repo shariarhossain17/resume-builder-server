@@ -594,6 +594,24 @@ async function run() {
       );
       res.send(result);
     });
+
+    // get user quiz result
+    app.get("/quizResult/:email", verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await quizMarksCollection.findOne(query);
+      res.send(result);
+    });
+
+    // get quiz result for leader board
+    app.get("/quizResult", verifyJwt, async (req, res) => {
+      const result = await quizMarksCollection
+        .find({})
+        .sort({ marks: -1 })
+        .limit(20)
+        .toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
